@@ -152,6 +152,10 @@ def handle_text(msg):
         start_flow(chat_id, msg["from"].get("first_name", ""))
         return
 
+    if text == "/myid":
+        send(chat_id, f"Ваш chat_id: <code>{chat_id}</code>")
+        return
+
     s = STATE.get(chat_id)
     if not s:
         # no active flow — treat as a general question, forward to admin
