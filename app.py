@@ -9,7 +9,6 @@ Env vars required:
   ADMIN_CHAT_ID       - optional; telegram chat id that receives finished booking requests
 """
 import os
-import re
 import requests
 from flask import Flask, request, jsonify
 
@@ -149,7 +148,7 @@ def handle_text(msg):
     chat_id = msg["chat"]["id"]
     text = (msg.get("text") or "").strip()
 
-    if text == "/start":
+    if text.startswith("/start"):
         start_flow(chat_id, msg["from"].get("first_name", ""))
         return
 
