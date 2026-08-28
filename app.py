@@ -3,12 +3,18 @@ Bomond booking bot — webhook-based Telegram bot (Flask + raw Bot API).
 
 Flow: /start -> choose master -> choose service -> date/time -> name -> phone -> confirm -> forwarded to admin.
 
+Also exposes POST /api/review (CORS-enabled for bomond.site) so the website
+can let visitors leave a review that gets posted straight to ADMIN_CHAT_ID.
+
 Env vars required:
   TELEGRAM_BOT_TOKEN  - bot token from @BotFather
   WEBHOOK_SECRET      - random path segment, keeps the webhook URL unguessable
-  ADMIN_CHAT_ID       - optional; telegram chat id that receives finished booking requests
+  ADMIN_CHAT_ID       - chat id (or @channelusername) that receives booking
+                        requests and site reviews. For a channel, the bot must
+                        first be added there as admin with "Post Messages".
 """
 import os
+import time
 import requests
 from flask import Flask, request, jsonify
 
@@ -17,10 +23,23 @@ WEBHOOK_SECRET = os.environ.get("WEBHOOK_SECRET", "hook")
 ADMIN_CHAT_ID = os.environ.get("ADMIN_CHAT_ID")
 API = f"https://api.telegram.org/bot{TOKEN}"
 
+# only these origins may call the public review API
+ALLOWED_ORIGINS = {
+    "https://bomond.site",
+    "https://www.bomond.site",
+    "https://bomond-salon.onrender.com",
+}
+
 app = Flask(__name__)
 
 # in-memory per-chat conversation state (fine for a single small salon bot)
 STATE = {}
+
+# very small anti-spam guard for the public review endpoint: one submission
+# per IP per 60s. Best-effort only (in-memory, resets on redeploy) — not a
+# substitute for real abuse protection, but enough for a small salon site.
+REVIEW_RATE_LIMIT = {}
+REVIEW_MIN_INTERVAL = 60
 
 MASTERS = [
     ("tatiana", "Татьяна Буева — главный колорист"),
@@ -236,6 +255,69 @@ def webhook():
         # never let a bad update crash the webhook response
         print("webhook error:", e)
     return jsonify(ok=True)
+
+
+MASTER_NAMES_REVIEW = {
+    "tatiana": "Татьяна Буева",
+    "alena": "Алёна Сухарева",
+    "lina": "Лина Овчарова",
+    "polina": "Полина Андреева",
+    "varvara": "Варвара Лунина (администратор)",
+    "": "не указан",
+}
+
+
+@app.route("/api/review", methods=["POST", "OPTIONS"])
+def submit_review():
+    if request.method == "OPTIONS":
+        return jsonify(ok=True)
+
+    ip = request.headers.get("X-Forwarded-For", request.remote_addr or "unknown").split(",")[0].strip()
+    now = time.time()
+    last = REVIEW_RATE_LIMIT.get(ip)
+    if last and now - last < REVIEW_MIN_INTERVAL:
+        return jsonify(ok=False, error="too_many_requests"), 429
+
+    data = request.get_json(force=True, silent=True) or {}
+    name = str(data.get("name", "")).strip()[:100]
+    text = str(data.get("text", "")).strip()[:2000]
+    master_key = str(data.get("master", "")).strip()
+    try:
+        rating = int(data.get("rating", 0))
+    except (TypeError, ValueError):
+        rating = 0
+    rating = max(1, min(5, rating)) if rating else 0
+
+    if not name or not text or not rating:
+        return jsonify(ok=False, error="missing_fields"), 400
+
+    REVIEW_RATE_LIMIT[ip] = now
+
+    master_name = MASTER_NAMES_REVIEW.get(master_key, "не указан")
+    stars = "★" * rating + "☆" * (5 - rating)
+    # plain text (no parse_mode) — user-submitted content is never trusted
+    # with Telegram's HTML formatting to avoid any markup-injection surprises
+    message = (
+        "🌟 Новый отзыв с сайта Bomond\n\n"
+        f"{stars}\n"
+        f"Имя: {name}\n"
+        f"Мастер: {master_name}\n\n"
+        f"{text}"
+    )
+    if ADMIN_CHAT_ID:
+        api("sendMessage", chat_id=ADMIN_CHAT_ID, text=message)
+
+    return jsonify(ok=True)
+
+
+@app.after_request
+def add_cors_headers(response):
+    origin = request.headers.get("Origin")
+    if origin in ALLOWED_ORIGINS:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    return response
 
 
 @app.route("/")
