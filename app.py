@@ -348,6 +348,28 @@ def import_clients_csv(data: bytes, filename="clients.csv", uploaded_by=None):
 
 # ---------------------------------------------------------------- admins / links / referrals
 
+def admin_targets():
+    """Chat ids that receive staff notifications: ADMIN_CHAT_ID plus everyone registered via /admin."""
+    targets = [ADMIN_CHAT_ID] if ADMIN_CHAT_ID else []
+    try:
+        with db() as conn:
+            targets += [r["tg_user_id"] for r in conn.execute("select tg_user_id from admins").fetchall()]
+    except Exception:  # noqa: BLE001
+        pass
+    return targets
+
+
+def notify_staff(text, html=False):
+    for target in admin_targets():
+        try:
+            if html:
+                send(target, text)
+            else:
+                api("sendMessage", chat_id=target, text=text)
+        except Exception as e:  # noqa: BLE001
+            print("notify error:", e)
+
+
 def is_admin(user_id):
     try:
         with db() as conn:
@@ -486,9 +508,8 @@ def handle_start(msg, payload):
                 "Вам — <b>скидка 15% на первый визит</b>, а подруге — бонусы на счёт. "
                 "Скидку применит администратор при записи, просто скажите, что вы по приглашению.",
             )
-            if ADMIN_CHAT_ID:
-                uname = f"@{user['username']}" if user.get("username") else f"id{user['id']}"
-                send(ADMIN_CHAT_ID, f"🎀 Новый гость по реферальной ссылке {ref['referral_code']} ({who}): {uname}. Скидка 15% на первый визит.")
+            uname = f"@{user['username']}" if user.get("username") else f"id{user['id']}"
+            notify_staff(f"🎀 Новый гость по реферальной ссылке {ref['referral_code']} ({who}): {uname}. Скидка 15% на первый визит.")
     start_flow(chat_id, user.get("first_name", ""))
 
 
@@ -707,18 +728,13 @@ def handle_document(msg):
 
 
 def notify_admin(chat_id, user, s):
-    if not ADMIN_CHAT_ID:
-        return
     username = f"@{user['username']}" if user.get("username") else f"id{user['id']}"
-    text = "🆕 Новая заявка на запись Bomond\n\n" + summary_text(s) + f"\n\nTelegram: {username}"
-    send(ADMIN_CHAT_ID, text)
+    notify_staff("🆕 Новая заявка на запись Bomond\n\n" + summary_text(s) + f"\n\nTelegram: {username}", html=True)
 
 
 def forward_general(chat_id, user, text):
-    if not ADMIN_CHAT_ID:
-        return
     username = f"@{user['username']}" if user.get("username") else f"id{user['id']}"
-    send(ADMIN_CHAT_ID, f"💬 Сообщение от {username} (chat {chat_id}):\n\n{text}")
+    notify_staff(f"💬 Сообщение от {username} (chat {chat_id}):\n\n{text}")
 
 
 @app.route(f"/webhook/{WEBHOOK_SECRET}", methods=["POST"])
@@ -794,8 +810,7 @@ def submit_review():
         f"Мастер: {master_name}\n\n"
         f"{text}"
     )
-    if ADMIN_CHAT_ID:
-        api("sendMessage", chat_id=ADMIN_CHAT_ID, text=message)
+    notify_staff(message)
 
     return jsonify(ok=True)
 
