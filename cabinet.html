@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Личный кабинет — Bomond</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root{
+    --bg:#f3ede2;--surface:#fbf7ef;--surface-2:#f4ecdf;
+    --ink:#241b1e;--ink-soft:#5b4c4e;--ink-faint:#8a787a;
+    --accent:#5b2a4c;--accent-2:#8b5fa0;--gold:#a9813f;
+    --line:rgba(36,27,30,0.14);--line-strong:rgba(36,27,30,0.26);
+    --shadow:0 18px 40px -22px rgba(36,27,30,0.35);
+    --promo-bg:#4a2440;--promo-gold:#d9ab5c;
+    --ok:#2f9e52;--warn:#c0392b;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#1c1417;--surface:#231a1d;--surface-2:#2b2023;
+      --ink:#f3eae0;--ink-soft:#cab9b3;--ink-faint:#93807e;
+      --accent:#d3a4dc;--accent-2:#a97fbe;--gold:#dcb572;
+      --line:rgba(243,234,224,0.14);--line-strong:rgba(243,234,224,0.26);
+      --shadow:0 18px 40px -22px rgba(0,0,0,0.6);
+    }
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{
+    background:var(--bg);color:var(--ink);
+    font-family:'Manrope',system-ui,sans-serif;font-size:15px;line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:calc(2rem + env(safe-area-inset-bottom));
+  }
+  h1,h2,h3{font-family:'Cormorant Garamond',Georgia,serif;font-weight:600;margin:0;letter-spacing:0.01em;}
+  p{margin:0;}
+  a{color:inherit;}
+  .wrap{max-width:640px;margin:0 auto;padding:0 1.1rem;}
+  .hero{
+    background:linear-gradient(160deg,var(--promo-bg),#2f1729);color:#fff;
+    padding:calc(1.4rem + env(safe-area-inset-top)) 1.1rem 1.6rem;text-align:center;
+  }
+  .mark{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:2rem;letter-spacing:0.16em;color:var(--promo-gold);text-transform:uppercase;line-height:1;}
+  .hero .sub{margin-top:0.45rem;font-size:0.68rem;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,255,255,0.7);}
+  .hero h1{margin-top:1.1rem;font-size:1.6rem;color:#fff;}
+  .hero .who{margin-top:0.25rem;color:rgba(255,255,255,0.8);font-size:0.9rem;}
+  .eyebrow{display:flex;align-items:center;gap:0.6em;font-size:0.72rem;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:var(--accent);}
+  .eyebrow::before{content:"";width:2em;height:1px;background:var(--gold);}
+  .card{
+    background:var(--surface);border:1px solid var(--line);border-radius:10px;
+    padding:1.15rem 1.15rem 1.25rem;margin-top:1rem;box-shadow:var(--shadow);
+  }
+  .card h2{font-size:1.35rem;margin:0.35rem 0 0.8rem;}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:0.6rem;margin-top:0.2rem;}
+  .stat{background:var(--surface-2);border-radius:8px;padding:0.75rem 0.6rem;text-align:center;}
+  .stat b{display:block;font-family:'Cormorant Garamond',serif;font-size:1.7rem;line-height:1;color:var(--accent);font-variant-numeric:tabular-nums;}
+  .stat span{display:block;margin-top:0.3rem;font-size:0.68rem;color:var(--ink-soft);letter-spacing:0.04em;text-transform:uppercase;}
+  .rows{display:flex;flex-direction:column;}
+  .row{display:flex;justify-content:space-between;gap:1rem;padding:0.6rem 0;border-bottom:1px solid var(--line);font-size:0.92rem;}
+  .row:last-child{border-bottom:0;}
+  .row span{color:var(--ink-soft);}
+  .row b{font-weight:600;text-align:right;}
+  .visits{display:flex;flex-direction:column;gap:0.55rem;}
+  .visit{display:flex;gap:0.8rem;align-items:flex-start;padding:0.7rem 0.8rem;background:var(--surface-2);border-radius:8px;}
+  .visit .d{flex:none;width:3.2rem;text-align:center;font-family:'Cormorant Garamond',serif;line-height:1.05;}
+  .visit .d b{display:block;font-size:1.5rem;color:var(--accent);}
+  .visit .d small{font-size:0.66rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-soft);}
+  .visit .t{flex:1;font-size:0.9rem;}
+  .visit .t small{display:block;color:var(--ink-soft);font-size:0.8rem;margin-top:0.15rem;}
+  .visit .p{flex:none;font-weight:700;color:var(--gold);white-space:nowrap;}
+  .pairs{display:flex;flex-direction:column;gap:1rem;}
+  .pair{background:var(--surface-2);border-radius:10px;padding:0.8rem;}
+  .pair-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;}
+  .ph{position:relative;border-radius:8px;overflow:hidden;aspect-ratio:3/4;background:var(--line);}
+  .ph img{width:100%;height:100%;object-fit:cover;display:block;}
+  .ph .tag{position:absolute;left:0.5rem;top:0.5rem;background:rgba(36,27,30,0.78);color:#fff;font-size:0.66rem;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;padding:0.3em 0.7em;border-radius:100px;}
+  .ph .tag.after{background:var(--gold);color:#2b1424;}
+  .ph.empty{display:flex;align-items:center;justify-content:center;color:var(--ink-faint);font-size:0.78rem;text-align:center;padding:1rem;}
+  .pair-meta{margin-top:0.6rem;font-size:0.82rem;color:var(--ink-soft);display:flex;justify-content:space-between;gap:0.6rem;flex-wrap:wrap;}
+  .empty-note{color:var(--ink-soft);font-size:0.9rem;}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:0.5em;
+    border:1px solid var(--accent);background:var(--accent);color:#fff;
+    font:inherit;font-weight:700;font-size:0.92rem;padding:0.8em 1.4em;border-radius:100px;
+    cursor:pointer;text-decoration:none;transition:filter .2s ease,transform .2s ease;width:100%;
+  }
+  .btn:hover{filter:brightness(1.08);} .btn:active{transform:scale(0.98);}
+  .btn.ghost{background:transparent;color:var(--ink);border-color:var(--line-strong);}
+  .btn.gold{background:var(--gold);border-color:var(--gold);color:#2b1424;}
+  .btn+.btn{margin-top:0.6rem;}
+  .ref-code{
+    margin:0.8rem 0;padding:0.9rem 1rem;border:1px dashed var(--line-strong);border-radius:8px;
+    display:flex;justify-content:space-between;align-items:center;gap:0.8rem;
+  }
+  .ref-code code{font-family:ui-monospace,Menlo,monospace;font-size:0.82rem;word-break:break-all;color:var(--ink-soft);}
+  .ref-code button{flex:none;border:0;background:var(--surface-2);color:var(--accent);font:inherit;font-weight:700;font-size:0.8rem;padding:0.5em 0.9em;border-radius:100px;cursor:pointer;}
+  .disc{display:flex;gap:0.6rem;margin-top:0.8rem;}
+  .disc div{flex:1;background:var(--surface-2);border-radius:8px;padding:0.7rem;text-align:center;}
+  .disc strong{display:block;font-family:'Cormorant Garamond',serif;font-size:1.9rem;line-height:1;color:var(--accent);}
+  .disc small{font-size:0.68rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-soft);}
+  .muted{color:var(--ink-soft);font-size:0.85rem;}
+  .status{text-align:center;padding:3rem 1rem;color:var(--ink-soft);}
+  .status.err{color:var(--warn);}
+  .spinner{width:28px;height:28px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--accent);margin:0 auto 0.8rem;animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .foot{margin-top:1.6rem;text-align:center;font-size:0.72rem;color:var(--ink-faint);}
+  [hidden]{display:none!important;}
+  @media (prefers-reduced-motion:reduce){.spinner{animation:none;}}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="mark">Bomond</div>
+  <div class="sub">Студия красоты · Балашиха</div>
+  <h1 id="title">Личный кабинет</h1>
+  <p class="who" id="who"></p>
+</header>
+
+<main class="wrap">
+  <div id="loading" class="status"><div class="spinner"></div>Открываем ваш кабинет…</div>
+
+  <!-- opened outside Telegram -->
+  <section id="noTelegram" class="card" hidden>
+    <p class="eyebrow">Вход</p>
+    <h2>Кабинет открывается из Telegram</h2>
+    <p class="muted">Так мы точно знаем, что это вы: номер телефона подтверждает сам Telegram — без паролей и SMS.</p>
+    <a class="btn" style="margin-top:1rem" href="https://t.me/Bomond_Hostess_bot?start=cabinet">Открыть в Telegram</a>
+  </section>
+
+  <!-- telegram user not linked to a phone yet -->
+  <section id="link" class="card" hidden>
+    <p class="eyebrow">Один шаг</p>
+    <h2>Подтвердите номер телефона</h2>
+    <p class="muted">Нажмите кнопку — Telegram передаст нам ваш номер, и мы найдём вашу карточку клиента: визиты, фото до/после, бонусы.</p>
+    <button class="btn" style="margin-top:1rem" id="btnContact">📱 Подтвердить номер</button>
+    <p class="muted" id="linkStatus" style="margin-top:0.7rem"></p>
+  </section>
+
+  <div id="cabinet" hidden>
+    <section class="card" id="profile">
+      <p class="eyebrow">Ваша карточка</p>
+      <h2 id="clientName"></h2>
+      <div class="stats" id="stats"></div>
+      <div class="rows" id="profileRows" style="margin-top:0.8rem"></div>
+      <p class="muted" id="notFound" hidden style="margin-top:0.6rem">Мы пока не нашли этот номер в базе студии — данные появятся после первого визита. А фото и реферальная программа уже доступны.</p>
+    </section>
+
+    <section class="card" id="visitsCard" hidden>
+      <p class="eyebrow">История</p>
+      <h2>Мои визиты</h2>
+      <div class="visits" id="visits"></div>
+    </section>
+
+    <section class="card">
+      <p class="eyebrow">Преображение</p>
+      <h2>Фото до и после</h2>
+      <div class="pairs" id="pairs"></div>
+      <p class="empty-note" id="pairsEmpty" hidden>Фото появятся здесь после вашего визита — мастер сделает снимки до процедуры и результата.</p>
+    </section>
+
+    <section class="card" id="referral">
+      <p class="eyebrow">Приведи подругу</p>
+      <h2>Скидка обеим</h2>
+      <p class="muted">Пригласите подругу, которая ещё не была в Bomond: ей — скидка 15% на первый визит, вам — 10% бонусами на счёт. Поделитесь вашей ссылкой: администратор увидит, что подруга пришла от вас.</p>
+      <div class="disc"><div><strong>10%</strong><small>вам бонусами</small></div><div><strong>15%</strong><small>подруге скидка</small></div></div>
+      <div class="ref-code"><code id="refLink"></code><button type="button" id="btnCopy">Копировать</button></div>
+      <button class="btn gold" id="btnShare">Отправить подруге</button>
+      <p class="muted" id="refStats" style="margin-top:0.8rem"></p>
+      <p class="muted" style="margin-top:0.5rem">Баллы по программе DIKIDI начисляются после первого визита подруги и действуют 2 месяца. <a href="https://t.me/bomondblh/253">Подробнее в канале</a>.</p>
+    </section>
+
+    <section class="card">
+      <p class="eyebrow">Запись</p>
+      <h2>Записаться на процедуру</h2>
+      <a class="btn" id="btnBook" href="https://dikidi.net/500351">Выбрать время онлайн</a>
+      <a class="btn ghost" href="tel:+79067181768">Позвонить +7 906 718-17-68</a>
+    </section>
+  </div>
+
+  <p class="foot">Bomond · шоссе Энтузиастов, 7/1, Балашиха · ежедневно 10:00–21:00</p>
+</main>
+
+<script>
+(function(){
+  var tg = window.Telegram && window.Telegram.WebApp;
+  var $ = function(id){ return document.getElementById(id); };
+  var initData = tg ? tg.initData : '';
+  var state = null;
+
+  function show(id){ ['loading','noTelegram','link','cabinet'].forEach(function(k){ $(k).hidden = (k !== id); }); }
+
+  if (!tg || !initData) { show('noTelegram'); return; }
+  tg.ready(); tg.expand();
+  try { tg.setHeaderColor('#4a2440'); tg.setBackgroundColor('#f3ede2'); } catch(e){}
+
+  function api(path, body){
+    return fetch(path, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(Object.assign({initData: initData}, body||{}))})
+      .then(function(r){ return r.json(); });
+  }
+
+  function fmtMoney(n){ if (n === null || n === undefined || n === '') return '—'; var v = Number(n); return isNaN(v) ? String(n) : v.toLocaleString('ru-RU') + ' ₽'; }
+  function fmtDate(s){ if (!s) return '—'; var d = new Date(s); return isNaN(d) ? String(s) : d.toLocaleDateString('ru-RU', {day:'numeric', month:'long', year:'numeric'}); }
+  var MONTHS = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+
+  function render(data){
+    state = data;
+    var c = data.client, tgu = data.telegram || {};
+    $('who').textContent = tgu.first_name ? ('Здравствуйте, ' + tgu.first_name + '!') : '';
+    $('clientName').textContent = (c && c.name) ? c.name : (tgu.first_name || 'Гость Bomond');
+
+    var stats = $('stats'); stats.innerHTML = '';
+    function stat(v, label){ var d = document.createElement('div'); d.className='stat'; d.innerHTML = '<b>' + v + '</b><span>' + label + '</span>'; stats.appendChild(d); }
+    if (c) {
+      stat(c.visits_count != null ? c.visits_count : '—', 'визитов');
+      stat(c.total_spent != null ? Number(c.total_spent).toLocaleString('ru-RU') : '—', '₽ всего');
+      stat(c.discount != null && c.discount !== '' ? (String(c.discount).replace('%','') + '%') : '—', 'скидка');
+    } else { stats.hidden = true; }
+
+    var rows = $('profileRows'); rows.innerHTML = '';
+    function row(k, v){ if (v === null || v === undefined || v === '') return; var d = document.createElement('div'); d.className='row'; d.innerHTML = '<span>' + k + '</span><b>' + v + '</b>'; rows.appendChild(d); }
+    row('Телефон', data.phone_display || data.phone);
+    if (c) {
+      row('Первый визит', c.first_visit ? fmtDate(c.first_visit) : null);
+      row('Последний визит', c.last_visit ? fmtDate(c.last_visit) : null);
+      row('День рождения', c.birthday ? fmtDate(c.birthday) : null);
+      row('Мастер', c.master || null);
+      row('Категория', c.category || null);
+      row('Бонусные баллы', c.bonus != null && c.bonus !== '' ? c.bonus : null);
+    }
+    $('notFound').hidden = !!c;
+
+    var visits = data.visits || [];
+    $('visitsCard').hidden = visits.length === 0;
+    var vbox = $('visits'); vbox.innerHTML = '';
+    visits.forEach(function(v){
+      var d = new Date(v.date); var day = isNaN(d) ? '' : d.getDate(); var mon = isNaN(d) ? (v.date||'') : MONTHS[d.getMonth()] + (d.getFullYear() !== new Date().getFullYear() ? ' ' + d.getFullYear() : '');
+      var el = document.createElement('div'); el.className = 'visit';
+      el.innerHTML = '<div class="d"><b>' + day + '</b><small>' + mon + '</small></div>' +
+        '<div class="t">' + (v.services || v.title || 'Визит') + (v.master ? '<small>' + v.master + '</small>' : '') + '</div>' +
+        '<div class="p">' + (v.amount != null ? fmtMoney(v.amount) : '') + '</div>';
+      vbox.appendChild(el);
+    });
+
+    var pairs = data.photo_pairs || [];
+    var pbox = $('pairs'); pbox.innerHTML = '';
+    $('pairsEmpty').hidden = pairs.length > 0;
+    pairs.forEach(function(p){
+      var el = document.createElement('div'); el.className = 'pair';
+      function ph(item, kind, label){
+        if (!item) return '<div class="ph empty">' + (kind==='before' ? 'фото до' : 'фото после') + ' — скоро</div>';
+        return '<div class="ph"><img src="/api/cabinet/photo/' + item.id + '?t=' + encodeURIComponent(data.photo_token) + '" alt="' + label + '" loading="lazy"><span class="tag ' + kind + '">' + label + '</span></div>';
+      }
+      el.innerHTML = '<div class="pair-grid">' + ph(p.before,'before','До') + ph(p.after,'after','После') + '</div>' +
+        '<div class="pair-meta"><span>' + fmtDate(p.date) + '</span><span>' + [p.service, p.master].filter(Boolean).join(' · ') + '</span></div>' +
+        (p.comment ? '<p class="muted" style="margin-top:0.4rem">' + p.comment + '</p>' : '');
+      pbox.appendChild(el);
+    });
+
+    var link = data.referral_link || '';
+    $('refLink').textContent = link;
+    var n = data.referrals_count || 0;
+    $('refStats').textContent = n ? ('По вашей ссылке пришли: ' + n + ' ' + (n===1?'подруга':(n<5?'подруги':'подруг')) + '.') : 'Пока никто не перешёл по вашей ссылке — самое время поделиться.';
+    $('btnShare').onclick = function(){
+      var text = 'Записывайся в студию красоты Bomond по моей ссылке — тебе скидка 15% на первый визит 💜 ' + link;
+      var url = 'https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + encodeURIComponent(text);
+      tg.openTelegramLink(url);
+    };
+    $('btnCopy').onclick = function(){
+      (navigator.clipboard ? navigator.clipboard.writeText(link) : Promise.reject()).then(function(){ $('btnCopy').textContent = 'Скопировано'; setTimeout(function(){ $('btnCopy').textContent = 'Копировать'; }, 1500); }).catch(function(){ tg.showAlert('Ссылка: ' + link); });
+    };
+    $('btnBook').onclick = function(e){ e.preventDefault(); tg.openLink('https://dikidi.net/500351'); };
+    show('cabinet');
+  }
+
+  function load(){
+    api('/api/cabinet/session').then(function(res){
+      if (!res.ok) { $('loading').className = 'status err'; $('loading').textContent = res.error === 'bad_signature' ? 'Не удалось подтвердить сессию Telegram. Откройте кабинет заново из бота.' : 'Что-то пошло не так. Попробуйте позже.'; return; }
+      if (!res.linked) { show('link'); return; }
+      render(res);
+    }).catch(function(){ $('loading').className = 'status err'; $('loading').textContent = 'Нет связи с сервером. Попробуйте позже.'; });
+  }
+
+  var polls = 0;
+  function pollLinked(){
+    polls++;
+    api('/api/cabinet/session').then(function(res){
+      if (res.ok && res.linked) { render(res); return; }
+      if (polls < 15) setTimeout(pollLinked, 1500); else $('linkStatus').textContent = 'Не удалось получить номер. Нажмите кнопку ещё раз.';
+    });
+  }
+
+  $('btnContact').onclick = function(){
+    $('linkStatus').textContent = 'Ждём подтверждение от Telegram…';
+    if (tg.requestContact) {
+      tg.requestContact(function(sent){
+        if (sent) { polls = 0; pollLinked(); }
+        else $('linkStatus').textContent = 'Вы отменили отправку номера. Без него мы не сможем найти вашу карточку.';
+      });
+    } else {
+      // very old clients: fall back to the bot's contact button
+      tg.openTelegramLink('https://t.me/Bomond_Hostess_bot?start=cabinet');
+    }
+  };
+
+  load();
+})();
+</script>
+</body>
+</html>
