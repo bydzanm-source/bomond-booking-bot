@@ -1,0 +1,21 @@
+name: keep-alive
+
+# Render free-tier усыпляет сервис после ~15 минут простоя, и первый запрос
+# занимает ~30 секунд — Telegram за это время закрывает мини-приложение.
+# Пингуем сервис, чтобы кабинет открывался мгновенно.
+
+on:
+  schedule:
+    - cron: '3,13,23,33,43,53 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Пинг кабинета
+        run: |
+          code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 120 \
+            https://bomond-booking-bot.onrender.com/cabinet || echo 000)
+          echo "HTTP $code"
+          test "$code" = "200"
