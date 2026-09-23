@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Bomond · Панель сайта</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#faf6f1;--card:#fff;--ink:#2b241f;--muted:#7a6f66;--line:#e6dad0;--accent:#b8794f;--accent-d:#9c6440;--ok:#3f8a5a;--err:#b5443a;--soft:#f3e9e2}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Manrope,system-ui,sans-serif}
+h1,h2{font-family:'EB Garamond',serif;font-weight:600;margin:0}
+button{font:inherit;cursor:pointer}
+.hidden{display:none!important}
+/* вход */
+.login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.login form{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:40px 32px;width:100%;max-width:380px;box-shadow:0 20px 50px -30px rgba(43,36,31,.4);text-align:center}
+.login h1{font-size:40px;margin-bottom:4px}
+.login p{color:var(--muted);margin:0 0 26px}
+input,textarea{font:inherit;color:var(--ink);width:100%;border:1px solid var(--line);border-radius:12px;padding:11px 14px;background:#fff;outline:none;transition:border-color .2s,box-shadow .2s}
+input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(184,121,79,.15)}
+.btn{border:0;border-radius:12px;padding:12px 20px;font-weight:600;background:var(--accent);color:#fff;transition:background .2s,transform .2s}
+.btn:hover{background:var(--accent-d)}
+.btn:disabled{opacity:.55;cursor:default}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn.ghost:hover{border-color:var(--accent);color:var(--accent);background:transparent}
+.login .btn{width:100%;margin-top:14px}
+.login .err{color:var(--err);font-size:13px;min-height:20px;margin-top:10px}
+/* каркас */
+.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:14px;padding:12px 24px;background:rgba(250,246,241,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top h1{font-size:26px}
+.top .sub{color:var(--muted);font-size:13px}
+.top .sp{flex:1}
+.top a{color:var(--accent);text-decoration:none;font-weight:600;font-size:14px}
+.layout{display:grid;grid-template-columns:240px 1fr;gap:24px;max-width:1180px;margin:0 auto;padding:24px}
+.nav{position:sticky;top:78px;align-self:start;display:flex;flex-direction:column;gap:4px}
+.nav button{border:0;background:transparent;text-align:left;padding:10px 14px;border-radius:12px;color:var(--ink);display:flex;justify-content:space-between;align-items:center;font-weight:500}
+.nav button:hover{background:var(--soft)}
+.nav button.on{background:var(--card);box-shadow:0 6px 18px -10px rgba(43,36,31,.3);font-weight:700}
+.nav .cnt{font-size:12px;color:var(--muted)}
+.nav .dirty{background:var(--accent);color:#fff;border-radius:10px;padding:1px 8px;font-size:12px}
+.main h2{font-size:32px;margin-bottom:4px}
+.main .hint{color:var(--muted);margin:0 0 18px}
+.search{margin-bottom:16px}
+.fields{display:flex;flex-direction:column;gap:12px;padding-bottom:110px}
+.f{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;transition:border-color .2s}
+.f.changed{border-color:var(--accent);box-shadow:0 0 0 3px rgba(184,121,79,.1)}
+.f label{display:block;font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.f textarea{resize:vertical;min-height:44px;line-height:1.5}
+.img{display:flex;gap:16px;align-items:center}
+.img img{width:132px;height:132px;object-fit:cover;border-radius:12px;background:var(--soft);flex-shrink:0}
+.img .side{display:flex;flex-direction:column;gap:8px;min-width:0;flex:1}
+.img .note{font-size:12px;color:var(--muted);word-break:break-all}
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;justify-content:center;gap:10px;padding:14px 20px;background:rgba(250,246,241,.95);backdrop-filter:blur(8px);border-top:1px solid var(--line);transform:translateY(110%);transition:transform .3s}
+.bar.on{transform:none}
+.toast{position:fixed;left:50%;top:20px;transform:translate(-50%,-150%);z-index:9;background:var(--ink);color:#fff;padding:12px 20px;border-radius:12px;font-weight:600;transition:transform .35s;max-width:90vw;text-align:center}
+.toast.on{transform:translate(-50%,0)}
+.toast.ok{background:var(--ok)}
+.toast.err{background:var(--err)}
+.loading{padding:60px 0;text-align:center;color:var(--muted)}
+@media(max-width:800px){
+  .layout{grid-template-columns:1fr;padding:14px}
+  .nav{position:static;flex-direction:row;overflow-x:auto;gap:6px;padding-bottom:6px}
+  .nav button{white-space:nowrap;flex-shrink:0}
+  .top{padding:10px 14px}
+  .top .sub{display:none}
+  .img{flex-direction:column;align-items:stretch}
+  .img img{width:100%;height:200px}
+}
+</style>
+</head>
+<body>
+
+<div class="login" id="login">
+  <form id="loginForm">
+    <h1>Bomond</h1>
+    <p>Панель управления сайтом</p>
+    <input type="password" id="pw" placeholder="Пароль" autocomplete="current-password" required>
+    <button class="btn" type="submit">Войти</button>
+    <div class="err" id="loginErr"></div>
+  </form>
+</div>
+
+<div id="app" class="hidden">
+  <div class="top">
+    <h1>Bomond</h1><span class="sub">панель сайта</span>
+    <span class="sp"></span>
+    <a href="https://bomond.site/" target="_blank" rel="noopener">Открыть сайт ↗</a>
+    <button class="btn ghost" id="logout" type="button">Выйти</button>
+  </div>
+  <div class="layout">
+    <nav class="nav" id="nav"></nav>
+    <main class="main">
+      <h2 id="secTitle"></h2>
+      <p class="hint">Правьте текст прямо в полях. Фото заменяются кнопкой — оно само уменьшится до нужного размера. Изменения попадают на сайт после «Сохранить и опубликовать».</p>
+      <input class="search" id="search" type="search" placeholder="Поиск по разделу — например, «стрижка» или «1700»">
+      <div class="fields" id="fields"><div class="loading">Загружаю содержимое сайта…</div></div>
+    </main>
+  </div>
+  <div class="bar" id="bar">
+    <button class="btn ghost" id="reset" type="button">Отменить</button>
+    <button class="btn" id="save" type="button">Сохранить и опубликовать</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const LABELS = { h1: 'Заголовок', h2: 'Заголовок', h3: 'Подзаголовок', h4: 'Подзаголовок', p: 'Текст', span: 'Надпись', li: 'Пункт списка', td: 'Ячейка', th: 'Заголовок колонки', figcaption: 'Подпись к фото', button: 'Кнопка', a: 'Текст ссылки', strong: 'Выделенный текст', b: 'Выделенный текст', em: 'Курсив', small: 'Мелкий текст' };
+const MAX_BYTES = 68000;
+const $ = (id) => document.getElementById(id);
+let sections = [];
+let current = 0;
+const edits = {};        // edits[sectionId][index] = value
+
+const toast = (text, kind) => {
+  const t = $('toast');
+  t.textContent = text;
+  t.className = 'toast on ' + (kind || '');
+  clearTimeout(t._h);
+  t._h = setTimeout(() => { t.className = 'toast'; }, kind === 'err' ? 5000 : 3000);
+};
+
+const api = async (path, opts) => {
+  const r = await fetch(path, Object.assign({ credentials: 'same-origin' }, opts || {}));
+  if (r.status === 401) { showLogin(); throw new Error('auth'); }
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) { const e = new Error(data.error || ('HTTP ' + r.status)); e.status = r.status; e.data = data; throw e; }
+  return data;
+};
+
+const showLogin = () => { $('app').classList.add('hidden'); $('login').classList.remove('hidden'); };
+const showApp = () => { $('login').classList.add('hidden'); $('app').classList.remove('hidden'); };
+
+$('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  $('loginErr').textContent = '';
+  const r = await fetch('/panel/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: $('pw').value }) });
+  if (!r.ok) { $('loginErr').textContent = 'Неверный пароль'; return; }
+  $('pw').value = '';
+  showApp();
+  load();
+});
+
+$('logout').addEventListener('click', async () => {
+  await fetch('/panel/api/logout', { method: 'POST' });
+  showLogin();
+});
+
+const dirtyCount = (sid) => Object.keys(edits[sid] || {}).length;
+
+const renderNav = () => {
+  const nav = $('nav');
+  nav.innerHTML = '';
+  sections.forEach((s, i) => {
+    if (!s.fields.length) return;
+    const b = document.createElement('button');
+    b.type = 'button';
+    if (i === current) b.className = 'on';
+    const d = dirtyCount(s.id);
+    b.innerHTML = '<span></span>' + (d ? '<span class="dirty">' + d + '</span>' : '<span class="cnt">' + s.fields.filter((f) => f.kind !== 'href').length + '</span>');
+    b.firstChild.textContent = s.title;
+    b.addEventListener('click', () => { current = i; $('search').value = ''; renderNav(); renderFields(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+    nav.appendChild(b);
+  });
+};
+
+const updateBar = () => {
+  const total = sections.reduce((n, s) => n + dirtyCount(s.id), 0);
+  $('bar').classList.toggle('on', total > 0);
+  $('save').textContent = total ? 'Сохранить и опубликовать (' + total + ')' : 'Сохранить и опубликовать';
+};
+
+const setEdit = (s, f, value, box) => {
+  edits[s.id] = edits[s.id] || {};
+  if (value === f.value) delete edits[s.id][f.i]; else edits[s.id][f.i] = value;
+  if (!Object.keys(edits[s.id]).length) delete edits[s.id];
+  box.classList.toggle('changed', value !== f.value);
+  renderNav();
+  updateBar();
+};
+
+const autosize = (ta) => { ta.style.height = 'auto'; ta.style.height = Math.min(360, ta.scrollHeight + 2) + 'px'; };
+
+/* сжимаем фото в браузере, чтобы влезло в ограничение Mottor */
+const shrink = (file) => new Promise((resolve, reject) => {
+  const img = new Image();
+  img.onload = async () => {
+    let w = img.naturalWidth;
+    let h = img.naturalHeight;
+    const k = Math.min(1, 1600 / Math.max(w, h));
+    w = Math.round(w * k); h = Math.round(h * k);
+    const c = document.createElement('canvas');
+    for (let pass = 0; pass < 8; pass += 1) {
+      c.width = w; c.height = h;
+      const g = c.getContext('2d');
+      g.fillStyle = '#fff';
+      g.fillRect(0, 0, w, h);
+      g.drawImage(img, 0, 0, w, h);
+      for (const q of [0.86, 0.78, 0.7, 0.62, 0.54]) {
+        const blob = await new Promise((r) => c.toBlob(r, 'image/jpeg', q));
+        if (blob && blob.size <= MAX_BYTES) { URL.revokeObjectURL(img.src); resolve(blob); return; }
+      }
+      w = Math.round(w * 0.82); h = Math.round(h * 0.82);
+    }
+    reject(new Error('не удалось сжать'));
+  };
+  img.onerror = () => reject(new Error('это не картинка'));
+  img.src = URL.createObjectURL(file);
+});
+
+const renderFields = () => {
+  const s = sections[current];
+  const box = $('fields');
+  $('secTitle').textContent = s.title;
+  box.innerHTML = '';
+  const q = $('search').value.trim().toLowerCase();
+  const mine = edits[s.id] || {};
+  let shown = 0;
+  s.fields.forEach((f) => {
+    if (f.kind === 'href' && !/^(https?:|tel:)/.test(f.value)) return;
+    const value = f.i in mine ? mine[f.i] : f.value;
+    if (q && !value.toLowerCase().includes(q) && !(f.kind === 'alt' && q === '')) return;
+    shown += 1;
+    const card = document.createElement('div');
+    card.className = 'f' + (f.i in mine ? ' changed' : '');
+    const label = document.createElement('label');
+    card.appendChild(label);
+
+    if (f.kind === 'image') {
+      label.textContent = 'Фотография';
+      const wrap = document.createElement('div');
+      wrap.className = 'img';
+      const im = document.createElement('img');
+      im.src = value; im.alt = ''; im.loading = 'lazy';
+      const side = document.createElement('div');
+      side.className = 'side';
+      const pick = document.createElement('input');
+      pick.type = 'file'; pick.accept = 'image/*'; pick.className = 'hidden';
+      const btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'btn ghost'; btn.textContent = 'Заменить фото';
+      const note = document.createElement('div');
+      note.className = 'note';
+      note.textContent = 'Подойдёт любое фото с телефона — уменьшится автоматически.';
+      btn.addEventListener('click', () => pick.click());
+      pick.addEventListener('change', async () => {
+        const file = pick.files && pick.files[0];
+        if (!file) return;
+        btn.disabled = true; btn.textContent = 'Загружаю…';
+        try {
+          const blob = await shrink(file);
+          const fd = new FormData();
+          fd.append('file', blob, 'photo.jpg');
+          const res = await api('/panel/api/image', { method: 'POST', body: fd });
+          im.src = res.url;
+          setEdit(s, f, res.url, card);
+          toast('Фото загружено — не забудьте сохранить', 'ok');
+        } catch (e) {
+          if (e.message !== 'auth') toast('Не получилось загрузить фото: ' + e.message, 'err');
+        }
+        btn.disabled = false; btn.textContent = 'Заменить фото'; pick.value = '';
+      });
+      side.appendChild(btn); side.appendChild(note); side.appendChild(pick);
+      wrap.appendChild(im); wrap.appendChild(side);
+      card.appendChild(wrap);
+    } else {
+      label.textContent = f.kind === 'alt' ? 'Описание фото (для поиска и незрячих)' : f.kind === 'href' ? 'Адрес ссылки' : (LABELS[f.tag] || 'Текст');
+      const field = f.kind === 'href' ? document.createElement('input') : document.createElement('textarea');
+      field.value = value;
+      if (f.kind !== 'href') { field.rows = 1; requestAnimationFrame(() => autosize(field)); }
+      field.addEventListener('input', () => { if (field.tagName === 'TEXTAREA') autosize(field); setEdit(s, f, field.value, card); });
+      card.appendChild(field);
+    }
+    box.appendChild(card);
+  });
+  if (!shown) box.innerHTML = '<div class="loading">Ничего не найдено</div>';
+};
+
+$('search').addEventListener('input', renderFields);
+
+$('reset').addEventListener('click', () => {
+  if (!confirm('Отменить все несохранённые правки?')) return;
+  Object.keys(edits).forEach((k) => delete edits[k]);
+  renderNav(); renderFields(); updateBar();
+});
+
+$('save').addEventListener('click', async () => {
+  const btn = $('save');
+  btn.disabled = true;
+  btn.textContent = 'Публикую…';
+  let done = 0;
+  try {
+    for (const s of sections) {
+      const mine = edits[s.id];
+      if (!mine) continue;
+      const originals = {};
+      Object.keys(mine).forEach((i) => { originals[i] = s.fields.find((f) => String(f.i) === String(i)).value; });
+      await api('/panel/api/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ section_id: s.id, edits: mine, originals }) });
+      done += Object.keys(mine).length;
+      delete edits[s.id];
+    }
+    toast('Опубликовано на bomond.site — правок: ' + done, 'ok');
+    await load(true);
+  } catch (e) {
+    if (e.status === 409) toast('Сайт изменился, пока вы редактировали. Обновите страницу панели.', 'err');
+    else if (e.message !== 'auth') toast('Не удалось сохранить: ' + e.message, 'err');
+  }
+  btn.disabled = false;
+  updateBar();
+});
+
+window.addEventListener('beforeunload', (e) => {
+  if (Object.keys(edits).length) { e.preventDefault(); e.returnValue = ''; }
+});
+
+const load = async (keepPlace) => {
+  if (!keepPlace) $('fields').innerHTML = '<div class="loading">Загружаю содержимое сайта…</div>';
+  try {
+    const data = await api('/panel/api/content');
+    sections = data.sections;
+    if (current >= sections.length || !sections[current].fields.length) current = sections.findIndex((s) => s.fields.length);
+    renderNav(); renderFields(); updateBar();
+  } catch (e) {
+    if (e.message !== 'auth') $('fields').innerHTML = '<div class="loading">Не удалось загрузить сайт: ' + e.message + '. Обновите страницу.</div>';
+  }
+};
+
+/* уже вошли? */
+fetch('/panel/api/content', { credentials: 'same-origin' }).then((r) => {
+  if (r.status === 401) { showLogin(); return null; }
+  return r.json();
+}).then((data) => {
+  if (!data || !data.ok) return;
+  showApp();
+  sections = data.sections;
+  current = sections.findIndex((s) => s.fields.length);
+  renderNav(); renderFields(); updateBar();
+}).catch(() => showLogin());
+</script>
+</body>
+</html>

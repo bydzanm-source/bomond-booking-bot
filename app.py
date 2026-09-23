@@ -35,6 +35,8 @@ from urllib.parse import parse_qsl
 import requests
 from flask import Flask, Response, jsonify, request, send_file
 
+import panel
+
 try:
     import psycopg
     from psycopg.rows import dict_row
@@ -994,6 +996,7 @@ def health():
     return "Bomond booking bot is running."
 
 
+panel.init_app(app)
 init_db()
 
 if __name__ == "__main__":
