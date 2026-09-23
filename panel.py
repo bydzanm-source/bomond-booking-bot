@@ -119,6 +119,9 @@ class Extractor(HTMLParser):
             self.line_starts.append(offset)
         self.items = []
         self.stack = []
+        self.heads = []
+        self.col = -1
+        self.row_name = ''
 
     def _offset(self):
         line, col = self.getpos()
@@ -126,6 +129,13 @@ class Extractor(HTMLParser):
 
     def handle_starttag(self, tag, attrs):
         self.stack.append(tag)
+        if tag == 'table':
+            self.heads = []
+        elif tag == 'tr':
+            self.col = -1
+            self.row_name = ''
+        elif tag in ('td', 'th'):
+            self.col += 1
         if tag not in ("img", "a"):
             return
         raw = self.get_starttag_text() or ""
@@ -167,8 +177,19 @@ class Extractor(HTMLParser):
         raw = self.html[start:stop]
         lead = len(raw) - len(raw.lstrip())
         trail = len(raw) - len(raw.rstrip())
-        self.items.append({"kind": "text", "tag": parent, "start": start + lead,
-                           "end": stop - trail, "value": html_mod.unescape(raw.strip())})
+        value = html_mod.unescape(raw.strip())
+        item = {"kind": "text", "tag": parent, "start": start + lead, "end": stop - trail, "value": value}
+        cell = next((t for t in reversed(self.stack) if t in ("td", "th")), None)
+        if cell == "th":
+            self.heads.append(value)
+        elif cell == "td":
+            if self.col == 0:
+                self.row_name = value
+                item["ctx"] = "Название услуги"
+            else:
+                head = self.heads[self.col] if self.col < len(self.heads) else "цена"
+                item["ctx"] = (self.row_name + " · " + head) if self.row_name else head
+        self.items.append(item)
 
 
 def extract(html):
@@ -211,7 +232,7 @@ def load_sections():
         if marker >= 0:
             prefix = html[marker + 7 : marker + 11]
         items = [it for it in extract(html) if it["kind"] != "href" or it["value"].startswith("http") or it["value"].startswith("tel:")]
-        fields = [{"i": it["i"], "kind": it["kind"], "tag": it["tag"],
+        fields = [{"i": it["i"], "kind": it["kind"], "tag": it["tag"], "ctx": it.get("ctx", ""),
                    "value": unescape_for_form(it["value"]) if it["kind"] == "text" else it["value"]}
                   for it in items]
         result.append({"id": section["id"], "position": section.get("position"),

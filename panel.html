@@ -222,7 +222,7 @@ const renderFields = () => {
   s.fields.forEach((f) => {
     if (f.kind === 'href' && !/^(https?:|tel:)/.test(f.value)) return;
     const value = f.i in mine ? mine[f.i] : f.value;
-    if (q && !value.toLowerCase().includes(q) && !(f.kind === 'alt' && q === '')) return;
+    if (q && !value.toLowerCase().includes(q) && !(f.ctx || '').toLowerCase().includes(q)) return;
     shown += 1;
     const card = document.createElement('div');
     card.className = 'f' + (f.i in mine ? ' changed' : '');
@@ -266,7 +266,7 @@ const renderFields = () => {
       wrap.appendChild(im); wrap.appendChild(side);
       card.appendChild(wrap);
     } else {
-      label.textContent = f.kind === 'alt' ? 'Описание фото (для поиска и незрячих)' : f.kind === 'href' ? 'Адрес ссылки' : (LABELS[f.tag] || 'Текст');
+      label.textContent = f.kind === 'alt' ? 'Описание фото (для поиска и незрячих)' : f.kind === 'href' ? 'Адрес ссылки' : (f.ctx || LABELS[f.tag] || 'Текст');
       const field = f.kind === 'href' ? document.createElement('input') : document.createElement('textarea');
       field.value = value;
       if (f.kind !== 'href') { field.rows = 1; requestAnimationFrame(() => autosize(field)); }
